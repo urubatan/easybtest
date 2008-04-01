@@ -37,14 +37,26 @@ includeTargets << new File("${grailsHome}/scripts/Bootstrap.groovy")
 generateLog4jFile = true
 
 target('default': "Run a Grails applications easyb tests") {
-  depends(classpath, checkVersion, configureProxy)
 
   testApp()
 }
 
 
 target(testApp: "The test app implementation target") {
-  depends(packageApp)
+  depends(packageApp, classpath, checkVersion, configureProxy, bootstrap)
+
+  antTestSource = Ant.path {
+    fileset ( dir : "${basedir}/test/behavior" , includes : '**/*' ){
+      include(name:"** /*Story.groovy")
+      include(name:"** /*.story")
+      include(name:"** /*Specification.groovy")
+      include(name:"** /*.specification")
+    }
+  }
+  testSource = []
+  antTestSource.list().each{
+    testSource.add(new File(it))
+  }
 
   testDir = "${basedir}/test/reports"
 
@@ -56,26 +68,9 @@ target(testApp: "The test app implementation target") {
   Ant.mkdir(dir: "${testDir}/xml")
   Ant.mkdir(dir: "${testDir}/plain")
 
-  /*Ant.easyb(failureProperty:"easyb.failed"){
+  reports = [new Report(location:"${testDir}/xml/easyb.xml",format:"xml",type:"easyb"),new Report(location:"${testDir}/plain/stories.xml",format:"txt",type:"story"),new Report(location:"${testDir}/plain/specifications.txt",format:"txt",type:"specification")];
 
-    classpath() {
-      classpathref: "grails.classpath"
-    }
-
-    report(location:"${testDir}/xml/easyb-report.xml", format:"xmleasyb")
-    report(location:"${testDir}/plain/sory-report.txt", format:"txtstory")
-    report(location:"${testDir}/plain/specification-report.txt", format:"txtspecification")
-
-    behaviors(dir:"${basedir}/test/behavior"){
-      include(name:"** /*Story.groovy")
-      include(name:"** /*.story")
-      include(name:"** /*Specification.groovy")
-      include(name:"** /*.specification")
-    }
-  }
-
-  Ant.fail(if:"easyb.failed", message:"Execution halted as specifications failed")*/
-  BehaviorRunner br = new BehaviorRunner([new Report(location:"${testDir}/xml/easyb.xml",format:"xml",type:"easyb"),new Report(location:"${testDir}/plain/stories.xml",format:"txt",type:"story"),new Report(location:"${testDir}/plain/specifications.txt",format:"txt",type:"specification")]);
-  br.runBehavior([new File("${basedir}/test/behavior/TestStory.groovy")])
+  BehaviorRunner br = new BehaviorRunner(reports);
+  br.runBehavior(testSource)
 
 }
