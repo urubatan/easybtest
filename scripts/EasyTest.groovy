@@ -23,6 +23,8 @@ import org.springframework.transaction.support.TransactionTemplate
 import org.springframework.transaction.support.TransactionCallback
 import org.springframework.transaction.TransactionStatus
 import org.apache.commons.logging.LogFactory
+import org.disco.easyb.BehaviorRunner;
+import org.disco.easyb.report.Report;
 
 
 Ant.property(environment: "env")
@@ -44,12 +46,6 @@ target('default': "Run a Grails applications easyb tests") {
 target(testApp: "The test app implementation target") {
   depends(packageApp)
 
-  Ant.taskdef(name:"easyb", classname:"org.disco.easyb.ant.BehaviorRunnerTask"){
-    classpath(){
-      classpathref: "grails.classpath"
-    }
-  }
-
   testDir = "${basedir}/test/reports"
 
   if(config.grails.testing.reports.destDir) {
@@ -60,7 +56,7 @@ target(testApp: "The test app implementation target") {
   Ant.mkdir(dir: "${testDir}/xml")
   Ant.mkdir(dir: "${testDir}/plain")
 
-  Ant.easyb(failureProperty:"easyb.failed"){
+  /*Ant.easyb(failureProperty:"easyb.failed"){
 
     classpath() {
       classpathref: "grails.classpath"
@@ -71,13 +67,15 @@ target(testApp: "The test app implementation target") {
     report(location:"${testDir}/plain/specification-report.txt", format:"txtspecification")
 
     behaviors(dir:"${basedir}/test/behavior"){
-      include(name:"**/*Story.groovy")
-      include(name:"**/*.story")
-      include(name:"**/*Specification.groovy")
-      include(name:"**/*.specification")
+      include(name:"** /*Story.groovy")
+      include(name:"** /*.story")
+      include(name:"** /*Specification.groovy")
+      include(name:"** /*.specification")
     }
   }
 
-  Ant.fail(if:"easyb.failed", message:"Execution halted as specifications failed")
+  Ant.fail(if:"easyb.failed", message:"Execution halted as specifications failed")*/
+  BehaviorRunner br = new BehaviorRunner([new Report(location:"${testDir}/xml/easyb.xml",format:"xml",type:"easyb"),new Report(location:"${testDir}/plain/stories.xml",format:"txt",type:"story"),new Report(location:"${testDir}/plain/specifications.txt",format:"txt",type:"specification")]);
+  br.runBehavior([new File("${basedir}/test/behavior/TestStory.groovy")])
 
 }
