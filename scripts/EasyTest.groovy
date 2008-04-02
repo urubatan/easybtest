@@ -5,28 +5,6 @@
 *
 */
 
-import org.codehaus.groovy.grails.commons.GrailsClassUtils as GCU;
-import grails.util.GrailsUtil as GU;
-import grails.util.GrailsWebUtil as GWU
-import org.codehaus.groovy.grails.commons.GrailsApplication;
-import org.codehaus.groovy.grails.support.*
-import java.lang.reflect.Modifier;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.codehaus.groovy.grails.commons.spring.GrailsRuntimeConfigurator as GRC;
-import org.apache.tools.ant.taskdefs.optional.junit.*
-import org.springframework.mock.web.*
-import org.springframework.core.io.*
-import org.springframework.web.context.request.RequestContextHolder;
-import org.codehaus.groovy.grails.plugins.*
-import org.codehaus.groovy.grails.web.servlet.GrailsApplicationAttributes
-import org.springframework.transaction.support.TransactionTemplate
-import org.springframework.transaction.support.TransactionCallback
-import org.springframework.transaction.TransactionStatus
-import org.apache.commons.logging.LogFactory
-import org.disco.easyb.BehaviorRunner;
-import org.disco.easyb.report.Report;
-
-
 Ant.property(environment: "env")
 grailsHome = Ant.antProject.properties."env.GRAILS_HOME"
 grailsApp = null
@@ -44,12 +22,7 @@ target('default': "Run a Grails applications easyb tests") {
 
 
 target(testApp: "The test app implementation target") {
-  depends(packageApp, classpath, checkVersion, configureProxy, bootstrap)
-
-  /*classLoader = new URLClassLoader([classesDir.toURL()] as URL[], rootLoader)
-  Thread.currentThread().setContextClassLoader(classLoader)
-  println(antProperty.'grails.classpath')*/
-
+  depends(packageApp, classpath)
 
   antTestSource = Ant.path {
     fileset ( dir : "${basedir}/test/behavior" , includes : '**/*' ){
@@ -81,6 +54,7 @@ target(testApp: "The test app implementation target") {
     antTestSource.list().each{
       arg(value:it)
     }
+    jvmarg(value:"-Dbasedir=${basedir}")
   }
 
 }
