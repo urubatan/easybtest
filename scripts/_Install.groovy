@@ -1,4 +1,3 @@
-
 //
 // This script is executed by Grails after plugin was installed to project.
 // This script is a Gant script so you can use all special variables provided
@@ -12,3 +11,4 @@
 Ant.property(environment:"env")
 grailsHome = Ant.antProject.properties."env.GRAILS_HOME"
 Ant.mkdir(dir:"${basedir}/test/behavior"
+

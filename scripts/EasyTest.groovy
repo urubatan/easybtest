@@ -31,6 +31,7 @@ Ant.property(environment: "env")
 grailsHome = Ant.antProject.properties."env.GRAILS_HOME"
 grailsApp = null
 appCtx = null
+def antProperty = Ant.project.properties
 
 includeTargets << new File("${grailsHome}/scripts/Bootstrap.groovy")
 
@@ -45,6 +46,11 @@ target('default': "Run a Grails applications easyb tests") {
 target(testApp: "The test app implementation target") {
   depends(packageApp, classpath, checkVersion, configureProxy, bootstrap)
 
+  /*classLoader = new URLClassLoader([classesDir.toURL()] as URL[], rootLoader)
+  Thread.currentThread().setContextClassLoader(classLoader)
+  println(antProperty.'grails.classpath')*/
+
+
   antTestSource = Ant.path {
     fileset ( dir : "${basedir}/test/behavior" , includes : '**/*' ){
       include(name:"** /*Story.groovy")
@@ -52,10 +58,6 @@ target(testApp: "The test app implementation target") {
       include(name:"** /*Specification.groovy")
       include(name:"** /*.specification")
     }
-  }
-  testSource = []
-  antTestSource.list().each{
-    testSource.add(new File(it))
   }
 
   testDir = "${basedir}/test/reports"
@@ -68,9 +70,17 @@ target(testApp: "The test app implementation target") {
   Ant.mkdir(dir: "${testDir}/xml")
   Ant.mkdir(dir: "${testDir}/plain")
 
-  reports = [new Report(location:"${testDir}/xml/easyb.xml",format:"xml",type:"easyb"),new Report(location:"${testDir}/plain/stories.xml",format:"txt",type:"story"),new Report(location:"${testDir}/plain/specifications.txt",format:"txt",type:"specification")];
 
-  BehaviorRunner br = new BehaviorRunner(reports);
-  br.runBehavior(testSource)
+  Ant.java(classpathref:"grails.classpath",classname:"org.disco.easyb.BehaviorRunner",fork:true){
+    arg(value:"-xmleasyb")
+    arg(value:"${testDir}/xml/easyb.xml")
+    arg(value:"-txtspecification")
+    arg(value:"${testDir}/plain/specifications.txt")
+    arg(value:"-txtstory")
+    arg(value:"${testDir}/plain/stories.txt")
+    antTestSource.list().each{
+      arg(value:it)
+    }
+  }
 
 }
