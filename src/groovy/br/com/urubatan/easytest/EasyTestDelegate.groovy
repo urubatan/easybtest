@@ -17,20 +17,32 @@ import org.springframework.mock.web.MockServletContext
 import org.codehaus.groovy.grails.cli.support.CommandLineResourceLoader;
 import grails.spring.*
 import org.springframework.web.context.WebApplicationContext
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 
 
 class EasyTestDelegate implements Plugable{
+	
 	def void easytest(value){
 		initApp()
 		println("hahaha --- hahaha ${value}")
 	}
 
 	private void initApp(){
+		def resolver = new PathMatchingResourcePatternResolver()
+		def resolveResources = {String pattern ->
+			try {
+				return resolver.getResources(pattern)
+			}
+			catch (Throwable e) {
+				return []
+			}
+		}
+
 		def builder = new WebBeanBuilder()
 		def basedir = System.getProperty("basedir")
-		beanDefinitions = builder.beans {
+		def beanDefinitions = builder.beans {
 			resourceHolder(org.codehaus.groovy.grails.commons.spring.GrailsResourceHolder) {
-				this.resources = "file:${basedir}/**/grails-app/**/*.groovy"
+				resources = "file:${basedir}/**/grails-app/**/*.groovy"
 			}
 			grailsResourceLoader(org.codehaus.groovy.grails.commons.GrailsResourceLoaderFactoryBean) {
 				grailsResourceHolder = resourceHolder
@@ -38,23 +50,23 @@ class EasyTestDelegate implements Plugable{
 			grailsApplication(org.codehaus.groovy.grails.commons.DefaultGrailsApplication.class, ref("grailsResourceLoader"))
 			pluginMetaManager(DefaultPluginMetaManager, resolveResources("file:${basedir}/plugins/*/plugin.xml"))
 		}
-		appCtx = beanDefinitions.createApplicationContext()
+		def appCtx = beanDefinitions.createApplicationContext()
 		def ctx = appCtx
 		// The mock servlet context needs to resolve resources relative to the 'web-app'
 		// directory. We also need to use a FileSystemResourceLoader, otherwise paths are
 		// evaluated against the classpath - not what we want!
-		servletContext = new MockServletContext('web-app', new FileSystemResourceLoader())
+		def servletContext = new MockServletContext('web-app', new FileSystemResourceLoader())
 		ctx.servletContext = servletContext
-		grailsApp = ctx.grailsApplication
+		def grailsApp = ctx.grailsApplication
 		ApplicationHolder.application = grailsApp
-		classLoader = grailsApp.classLoader
-		pluginManager.application = grailsApp
-		pluginManager.doArtefactConfiguration()
+		def classLoader = grailsApp.classLoader
+		//pluginManager.application = grailsApp
+		//pluginManager.doArtefactConfiguration()
 		grailsApp.initialise()
 		appCtx.resourceLoader = new  CommandLineResourceLoader()
 		def config = new org.codehaus.groovy.grails.commons.spring.GrailsRuntimeConfigurator(grailsApp,appCtx)
-		appCtx = config.configure(servletContext)
 		servletContext.setAttribute(ApplicationAttributes.APPLICATION_CONTEXT,appCtx );
 		servletContext.setAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, appCtx);
+		appCtx = config.configure(servletContext)
 	}
 }
