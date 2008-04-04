@@ -85,6 +85,15 @@ target(testApp: "The test app implementation target") {
     testSource.add(new File(it))
   }
 
+  urls = []
+  cp = Ant.path {
+    path(refid:"grails.classpath")
+  }
+  cp.list().each {
+    urls.add(new File(it).toURI().toURL())
+  }
+  classLoader = new URLClassLoader(urls as URL[], this.class.classLoader)
+
   testDir = "${basedir}/test/reports"
 
   if(config.grails.testing.reports.destDir) {
@@ -97,7 +106,7 @@ target(testApp: "The test app implementation target") {
 
   reports = [new Report(location:"${testDir}/xml/easyb.xml",format:"xml",type:"easyb"),new Report(location:"${testDir}/plain/stories.xml",format:"txt",type:"story"),new Report(location:"${testDir}/plain/specifications.txt",format:"txt",type:"specification")];
 
-  BehaviorRunner br = new BehaviorRunner(reports,appCtx,ApplicationHolder.application);
+  BehaviorRunner br = new BehaviorRunner(reports,appCtx,ApplicationHolder.application,classLoader);
   br.runBehavior(testSource)
 
 }
@@ -107,14 +116,16 @@ class BehaviorRunner {
   def reports = [];
     Object appCtx;
     Object grailsApp;
+    URLClassLoader classLoader;
 
     public BehaviorRunner() {
       this(null);
     }
 
-    public BehaviorRunner(List<Report> reports, Object appCtx, Object grailsApp) {
+    public BehaviorRunner(List<Report> reports, Object appCtx, Object grailsApp,URLClassLoader classLoader) {
       this.appCtx = appCtx;
       this.grailsApp = grailsApp;
+      this.classLoader = classLoader;
       this.reports = addDefaultReports(reports);
     }
 
@@ -185,10 +196,10 @@ class BehaviorRunner {
           GroovyShell g = null;
           if (behavior instanceof Story) {
             currentStep = listener.startStep(BehaviorStepType.STORY, behavior.getPhrase());
-            g = new GroovyShell(StoryBinding.getBinding(listener));
+            g = new GroovyShell(classLoader,StoryBinding.getBinding(listener));
           } else {
             currentStep = listener.startStep(BehaviorStepType.SPECIFICATION, behavior.getPhrase());
-            g = new GroovyShell(SpecificationBinding.getBinding(listener));
+            g = new GroovyShell(classLoader,SpecificationBinding.getBinding(listener));
           }
           g.getContext().setVariable("grailsApp",grailsApp);
           g.getContext().setVariable("appCtx",appCtx);

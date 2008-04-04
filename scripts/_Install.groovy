@@ -9,6 +9,6 @@
 // Ant.mkdir(dir:"c:\Documents and Settings\jardimr\Desktop/easybtest/grails-app/jobs")
 //
 
-//Ant.property(environment:"env")
-//grailsHome = Ant.antProject.properties."env.GRAILS_HOME"
-//Ant.mkdir(dir:"${basedir}/test/behavior"
+Ant.property(environment:"env")
+grailsHome = Ant.antProject.properties."env.GRAILS_HOME"
+Ant.mkdir(dir:"${basedir}/test/behavior"
