@@ -23,7 +23,7 @@ import org.springframework.transaction.support.TransactionTemplate
 import org.springframework.transaction.support.TransactionCallback
 import org.springframework.transaction.TransactionStatus
 import org.apache.commons.logging.LogFactory
-import org.disco.easyb.BehaviorRunner;
+//import br.com.urubatan.easybtest.BehaviorRunner;
 import org.disco.easyb.report.Report;
 
 
@@ -70,7 +70,7 @@ target(testApp: "The test app implementation target") {
 
   reports = [new Report(location:"${testDir}/xml/easyb.xml",format:"xml",type:"easyb"),new Report(location:"${testDir}/plain/stories.xml",format:"txt",type:"story"),new Report(location:"${testDir}/plain/specifications.txt",format:"txt",type:"specification")];
 
-  BehaviorRunner br = new BehaviorRunner(reports);
+  br.com.urubatan.easybtest.BehaviorRunner br = new br.com.urubatan.easybtest.BehaviorRunner(reports);
   br.runBehavior(testSource)
 
 }
