@@ -1,0 +1,24 @@
+<plugin name='easybtest' version='0.2'>
+  <author>Rodrigo Uruatan Ferreira Jardim</author>
+  <authorEmail>blog@urubatan.com.br</authorEmail>
+  <title>This plugin enables the testing of the application using the BDD easyb library</title>
+  <description>    This plugin enables the use of Behavior Driven Development to test your Grails Application,
+    The library behind this is easyb, easyb is a BDD library written in groovy.
+    For example, you can test your app like this:
+
+    given "an invalid zip code", {
+      invalidzipcode = "221o1"
+    }
+    and "given the zipcodevalidator is initialized", {
+      zipvalidate = new ZipCodeValidator()
+    }
+    when "validate is invoked with the invalid zip code", {
+      value = zipvalidate.validate(invalidzipcode)
+    }
+    then "the validator instance should return false", {
+      value.shouldBe false
+    }
+    </description>
+  <documentation>http://www.urubatan.info/tag/easyb-test/</documentation>
+  <resources />
+</plugin>
