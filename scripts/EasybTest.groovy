@@ -59,40 +59,36 @@ grailsHome = Ant.antProject.properties."env.GRAILS_HOME"
 grailsApp = null
 appCtx = null
 
-includeTargets << new File("${grailsHome}/scripts/Bootstrap.groovy")
+includeTargets << new File ( "${grailsHome}/scripts/Package.groovy" )
+includeTargets << new File ( "${grailsHome}/scripts/Bootstrap.groovy" )
+
 
 generateLog4jFile = true
 
 target('default': "Run a Grails applications easyb tests") {
-
+  depends( checkVersion, configureProxy, packageApp, classpath)
+  classLoader = new URLClassLoader([classesDir.toURL()] as URL[], rootLoader)
+  Thread.currentThread().setContextClassLoader(classLoader)
+  loadApp()
+  configureApp()
   testApp()
 }
 
 
 target(testApp: "The test app implementation target") {
-  depends(classpath, checkVersion, configureProxy,packageApp,bootstrap)
 
   antTestSource = Ant.path {
-    fileset ( dir : "${basedir}/test/behavior" , includes : '**/*' ){
-      include(name:"** /*Story.groovy")
-      include(name:"** /*.story")
-      include(name:"** /*Specification.groovy")
-      include(name:"** /*.specification")
+    fileset ( dir : "${basedir}/test/behavior"  ){
+      include(name:"**/*Story.groovy")
+      include(name:"**/*.story")
+      include(name:"**/*Specification.groovy")
+      include(name:"**/*.specification")
     }
   }
   testSource = []
   antTestSource.list().each{
     testSource.add(new File(it))
   }
-
-  urls = []
-  cp = Ant.path {
-    path(refid:"grails.classpath")
-  }
-  cp.list().each {
-    urls.add(new File(it).toURI().toURL())
-  }
-  classLoader = new URLClassLoader(urls as URL[], this.class.classLoader)
 
   testDir = "${basedir}/test/reports"
 
@@ -106,7 +102,7 @@ target(testApp: "The test app implementation target") {
 
   reports = [new Report(location:"${testDir}/xml/easyb.xml",format:"xml",type:"easyb"),new Report(location:"${testDir}/plain/stories.xml",format:"txt",type:"story"),new Report(location:"${testDir}/plain/specifications.txt",format:"txt",type:"specification")];
 
-  BehaviorRunner br = new BehaviorRunner(reports,appCtx,ApplicationHolder.application,classLoader);
+  BehaviorRunner br = new BehaviorRunner(reports,appCtx,ApplicationHolder.application);
   br.runBehavior(testSource)
 
 }
@@ -116,16 +112,14 @@ class BehaviorRunner {
   def reports = [];
     Object appCtx;
     Object grailsApp;
-    URLClassLoader classLoader;
 
     public BehaviorRunner() {
       this(null);
     }
 
-    public BehaviorRunner(List<Report> reports, Object appCtx, Object grailsApp,URLClassLoader classLoader) {
+    public BehaviorRunner(List<Report> reports, Object appCtx, Object grailsApp) {
       this.appCtx = appCtx;
       this.grailsApp = grailsApp;
-      this.classLoader = classLoader;
       this.reports = addDefaultReports(reports);
     }
 
@@ -196,10 +190,10 @@ class BehaviorRunner {
           GroovyShell g = null;
           if (behavior instanceof Story) {
             currentStep = listener.startStep(BehaviorStepType.STORY, behavior.getPhrase());
-            g = new GroovyShell(classLoader,StoryBinding.getBinding(listener));
+            g = new GroovyShell(grailsApp.classLoader,StoryBinding.getBinding(listener));
           } else {
             currentStep = listener.startStep(BehaviorStepType.SPECIFICATION, behavior.getPhrase());
-            g = new GroovyShell(classLoader,SpecificationBinding.getBinding(listener));
+            g = new GroovyShell(grailsApp.classLoader,SpecificationBinding.getBinding(listener));
           }
           g.getContext().setVariable("grailsApp",grailsApp);
           g.getContext().setVariable("appCtx",appCtx);
