@@ -24,8 +24,17 @@ import org.springframework.transaction.support.TransactionCallback
 import org.springframework.transaction.TransactionStatus
 import org.apache.commons.logging.LogFactory
 import org.codehaus.groovy.grails.commons.ApplicationHolder;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.orm.hibernate3.SessionFactoryUtils;
+
 import org.disco.easyb.report.Report;
 import groovy.lang.GroovyShell;
+import org.hibernate.FlushMode;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.springframework.orm.hibernate3.SessionHolder;
+
+
 
 import java.io.File;
 import java.io.IOException;
@@ -100,7 +109,7 @@ target(testApp: "The test app implementation target") {
   Ant.mkdir(dir: "${testDir}/xml")
   Ant.mkdir(dir: "${testDir}/plain")
 
-  reports = [new Report(location:"${testDir}/xml/easyb.xml",format:"xml",type:"easyb"),new Report(location:"${testDir}/plain/stories.xml",format:"txt",type:"story"),new Report(location:"${testDir}/plain/specifications.txt",format:"txt",type:"specification")];
+  reports = [new Report(location:"${testDir}/xml/easyb.xml",format:"xml",type:"easyb"),new Report(location:"${testDir}/plain/stories.txt",format:"txt",type:"story"),new Report(location:"${testDir}/plain/specifications.txt",format:"txt",type:"specification")];
 
   BehaviorRunner br = new BehaviorRunner(reports,appCtx,ApplicationHolder.application);
   br.runBehavior(testSource)
@@ -164,6 +173,7 @@ class BehaviorRunner {
       }
 
     }
+
     /**
     *
     * @param behaviorFiles
@@ -172,6 +182,10 @@ class BehaviorRunner {
     */
     private void executeSpecifications(final Collection<File> behaviorFiles, final BehaviorListener listener) throws IOException {
       for (File behaviorFile : behaviorFiles) {
+        def sessionFactory = appCtx.getBean("sessionFactory")
+        Session session = SessionFactoryUtils.getSession(sessionFactory, true);
+        TransactionSynchronizationManager.bindResource(sessionFactory, new SessionHolder(session));
+        session.setFlushMode(FlushMode.AUTO)
         def behavior = null;
           try {
             behavior = BehaviorFactory.createBehavior(behaviorFile);
@@ -203,6 +217,10 @@ class BehaviorRunner {
           long endTime = System.currentTimeMillis();
 
           printMetrics(behavior, startTime, currentStep, endTime);
+          SessionHolder sessionHolder =	(SessionHolder) TransactionSynchronizationManager.unbindResource(sessionFactory);
+          SessionFactoryUtils.closeSession(sessionHolder.getSession());
+
+
         }
       }
 
