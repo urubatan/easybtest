@@ -14,3 +14,6 @@ when "validate is invoked with the invalid zip code", {
 then "the validator instance should return false", {
   value.shouldBe false
 }
+
+
+You can find more information about this plugin and latest released in the following URL: http://www.urubatan.info/tag/easyb-test/
