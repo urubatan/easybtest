@@ -1,4 +1,4 @@
-<plugin name='easybtest' version='0.2'>
+<plugin name='easybtest' version='0.3'>
   <author>Rodrigo Uruatan Ferreira Jardim</author>
   <authorEmail>blog@urubatan.com.br</authorEmail>
   <title>This plugin enables the testing of the application using the BDD easyb library</title>

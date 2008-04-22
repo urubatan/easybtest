@@ -1,6 +1,6 @@
 
 class EasybtestGrailsPlugin {
-  def version = 0.2;
+  def version = 0.3;
   def author = "Rodrigo Uruatan Ferreira Jardim";
   def authorEmail = "blog@urubatan.com.br";
   def title = "This plugin enables the testing of the application using the BDD easyb library";
